@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>의약품 실적 대시보드</title>
+    <style>
+        body { font-family: 'Malgun Gothic', sans-serif; text-align: center; padding: 50px; background-color: #f4f7f6; }
+        .container { background: white; border: 2px solid #4CAF50; padding: 30px; border-radius: 15px; display: inline-block; box-shadow: 0 4px 8px rgba(0,0,0,0.1); width: 90%; max-width: 850px; }
+        button { background-color: #4CAF50; color: white; padding: 12px 25px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; display: none; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #e8f5e9; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💊 의약품 생산·수입 실적 조회</h1>
+        <p>반드시 깃허브 주소(https://...)로 접속해야 데이터가 보입니다.</p>
+        <button onclick="fetchData()">데이터 불러오기</button>
+        <div id="loading" style="display:none; margin:20px;">⏳ 데이터를 불러오는 중...</div>
+        <table id="resultTable">
+            <thead>
+                <tr><th>업체명</th><th>제품명</th><th>실적년도</th><th>실적금액</th></tr>
+            </thead>
+            <tbody id="resultBody"></tbody>
+        </table>
+    </div>
+
+    <script>
+        async function fetchData() {
+            // 인코딩된 키와 디코딩된 키 중 하나라도 맞도록 처리된 주소입니다.
+            const url = "https://apis.data.go.kr/1471000/MdcinPrdctnImportAcmsltService02/getMdcinPrdctnImportAcmsltList02?serviceKey=3358d0a8ad766199bceba04104a7d6ff5c9851fd5a9de8a01f81ffa06a76edd8&type=json&numOfRows=10&pageNo=1";
+            
+            const loading = document.getElementById('loading');
+            const table = document.getElementById('resultTable');
+            const tbody = document.getElementById('resultBody');
+
+            loading.style.display = 'block';
+            table.style.display = 'none';
+            tbody.innerHTML = '';
+
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error("네트워크 응답 에러");
+                const data = await response.json();
+                
+                if (data.response && data.response.body && data.response.body.items) {
+                    const items = data.response.body.items;
+                    const itemList = Array.isArray(items) ? items : [items];
+                    itemList.forEach(item => {
+                        tbody.innerHTML += `<tr>
+                            <td>${item.ENTP_NAME || '-'}</td>
+                            <td>${item.PRDUCT_NAME || '-'}</td>
+                            <td>${item.PRDCTN_YEAR || '-'}</td>
+                            <td>${Number(item.PRDCTN_AMOUNT || 0).toLocaleString()}</td>
+                        </tr>`;
+                    });
+                    loading.style.display = 'none';
+                    table.style.display = 'table';
+                } else {
+                    alert("인증키가 아직 활성화되지 않았습니다. 내일 다시 시도해 주세요!");
+                }
+            } catch (error) {
+                loading.style.display = 'none';
+                alert("에러: 깃허브 주소로 접속했는지 확인해 주세요!\n(주소창이 jbs361404-collab.github.io 로 시작해야 합니다)");
+            }
+        }
+    </script>
+</body>
+</html>
